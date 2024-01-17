@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+var PhoneProviders = []string{"xl", "simpati", "indosat"}
+
 type PhoneNumber struct {
 	ID          uint   `json:"id" gorm:"primaryKey" sql:"AUTO_INCREMENT"`
 	PhoneNumber string `json:"phone_number"`
@@ -16,6 +18,11 @@ type PhoneNumber struct {
 }
 
 type PhoneNumberRequest struct {
+	PhoneNumber string `json:"phone_number"`
+	Provider    string `json:"provider"`
+}
+
+type PhoneNumberResponse struct {
 	PhoneNumber string `json:"phone_number"`
 	Provider    string `json:"provider"`
 }

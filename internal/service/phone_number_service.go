@@ -4,6 +4,8 @@ import (
 	"JTI_JTN_TechnicalTest/internal/config"
 	"JTI_JTN_TechnicalTest/internal/model"
 	"JTI_JTN_TechnicalTest/internal/repository"
+	"reflect"
+	"strconv"
 )
 
 type PhoneNumberService struct {
@@ -15,28 +17,37 @@ func NewPhoneNumberService(conn *config.DatabaseConn) *PhoneNumberService {
 	return &PhoneNumberService{repo}
 }
 
-func (service *PhoneNumberService) Create(request model.PhoneNumberRequest) error {
-	phoneNumber := model.PhoneNumber{PhoneNumber: request.PhoneNumber, Provider: request.Provider}
-	err := service.repo.Insert(phoneNumber)
-	if err != nil {
-		return err
-	}
+func (service *PhoneNumberService) Create(request interface{}) error {
+	if reflect.TypeOf(request).Kind() == reflect.Slice {
+		req := request.([]model.PhoneNumberRequest)
+		var phoneNumbers []model.PhoneNumber
 
-	return nil
-}
+		for _, request := range req {
+			lastChar, _ := strconv.Atoi(string(request.PhoneNumber[len(request.PhoneNumber)-1]))
+			numberType := 0 // 0 ganjil, 1 genap
+			if lastChar%2 == 0 {
+				numberType = 1
+			}
+			phoneNumber := model.PhoneNumber{PhoneNumber: request.PhoneNumber, Provider: request.Provider, Type: numberType}
+			phoneNumbers = append(phoneNumbers, phoneNumber)
+		}
 
-func (service *PhoneNumberService) CreateBatch(request []model.PhoneNumberRequest) error {
-	phoneNumbers := []model.PhoneNumber{}
-
-	for idx, _ := range phoneNumbers {
-		request := phoneNumbers[idx]
-		phoneNumber := model.PhoneNumber{PhoneNumber: request.PhoneNumber, Provider: request.Provider}
-		phoneNumbers = append(phoneNumbers, phoneNumber)
-	}
-
-	err := service.repo.Insert(phoneNumbers)
-	if err != nil {
-		return err
+		err := service.repo.Insert(phoneNumbers)
+		if err != nil {
+			return err
+		}
+	} else {
+		req := request.(model.PhoneNumberRequest)
+		lastChar, _ := strconv.Atoi(string(req.PhoneNumber[len(req.PhoneNumber)-1]))
+		numberType := 0 // 0 ganjil, 1 genap
+		if lastChar%2 == 0 {
+			numberType = 1
+		}
+		phoneNumber := model.PhoneNumber{PhoneNumber: req.PhoneNumber, Provider: req.Provider, Type: numberType}
+		err := service.repo.Insert(&phoneNumber)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

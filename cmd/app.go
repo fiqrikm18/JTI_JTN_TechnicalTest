@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"JTI_JTN_TechnicalTest/internal/config"
+	"JTI_JTN_TechnicalTest/internal/router"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -14,7 +14,7 @@ func Run() {
 	svr.Use(middleware.Logger())
 	svr.Use(middleware.Gzip())
 
-	config.RegisterRouter(svr)
+	router.RegisterRouter(svr)
 
 	port := os.Getenv("APP_PORT")
 	svr.Logger.Fatal(svr.Start(":" + port))

@@ -1,4 +1,4 @@
-package config
+package router
 
 import (
 	"JTI_JTN_TechnicalTest/internal/controller"
@@ -6,7 +6,6 @@ import (
 )
 
 func RegisterRouter(e *echo.Echo) {
-	phoneNumberController := controller.PhoneNumberController{}
+	phoneNumberController := controller.NewPhoneNumberController()
 	e.POST("/create", phoneNumberController.InsertPhoneNumber)
-	e.POST("/create_batch", phoneNumberController.InsertBatchPhoneNumber)
 }
