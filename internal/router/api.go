@@ -8,4 +8,6 @@ import (
 func RegisterRouter(e *echo.Echo) {
 	phoneNumberController := controller.NewPhoneNumberController()
 	e.POST("/create", phoneNumberController.InsertPhoneNumber)
+	e.DELETE("/delete/:id", phoneNumberController.DeletePhoneNumber)
+	e.PUT("/update/:id", phoneNumberController.UpdatePhoneNumber)
 }

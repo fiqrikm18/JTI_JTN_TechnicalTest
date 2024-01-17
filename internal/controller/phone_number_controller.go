@@ -4,12 +4,12 @@ import (
 	"JTI_JTN_TechnicalTest/internal/config"
 	"JTI_JTN_TechnicalTest/internal/model"
 	"JTI_JTN_TechnicalTest/internal/service"
-	"fmt"
+	"JTI_JTN_TechnicalTest/internal/util"
 	"github.com/labstack/echo/v4"
 	"math/rand"
 	"net/http"
 	"reflect"
-	"time"
+	"strconv"
 )
 
 type PhoneNumberController struct {
@@ -40,11 +40,11 @@ func (p *PhoneNumberController) InsertPhoneNumber(c echo.Context) error {
 	if reflect.ValueOf(phoneNumberRequest).IsZero() {
 		var phoneNumbersRequest []model.PhoneNumberRequest
 		for i := 0; i < 25; i++ {
-			phoneNumber := generatePhoneNumber()
+			phoneNumber := util.GeneratePhoneNumber()
 			phoneProvider := model.PhoneProviders[rand.Intn(3)]
 
 			phoneNumbersRequest = append(phoneNumbersRequest, model.PhoneNumberRequest{
-				phoneNumber, phoneProvider,
+				PhoneNumber: phoneNumber, Provider: phoneProvider,
 			})
 		}
 
@@ -66,18 +66,56 @@ func (p *PhoneNumberController) InsertPhoneNumber(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, echo.Map{
-		"message": "phone number created",
+		"message": "phone number deleted",
 		"data":    phoneNumberResponses,
 	})
 }
 
-func generatePhoneNumber() string {
-	rand.Seed(time.Now().UnixNano())
-	phoneNumber := "08"
-
-	for i := 1; i < 11; i++ {
-		phoneNumber += fmt.Sprintf("%d", rand.Intn(10))
+func (p *PhoneNumberController) DeletePhoneNumber(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+	phoneNumber, err := p.service.FindNumberById(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message": err.Error(),
+		})
 	}
 
-	return phoneNumber
+	err = p.service.DeleteNumber(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "phone number deleted",
+		"data":    phoneNumber,
+	})
+}
+
+func (p *PhoneNumberController) UpdatePhoneNumber(c echo.Context) error {
+	var request model.PhoneNumberRequest
+	id, _ := strconv.Atoi(c.Param("id"))
+	if err := c.Bind(&request); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message": err.Error(),
+		})
+	}
+
+	_, err := p.service.FindNumberById(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message": err.Error(),
+		})
+	}
+
+	phoneNumber, err := p.service.UpdateNumber(id, request)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusCreated, echo.Map{
+		"message": "phone number updated",
+		"data":    phoneNumber,
+	})
 }

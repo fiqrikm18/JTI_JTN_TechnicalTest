@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"JTI_JTN_TechnicalTest/internal/model"
 	"gorm.io/gorm"
 )
 
@@ -14,6 +15,43 @@ func NewPhoneNumberRepository(db *gorm.DB) *PhoneNumberRepository {
 	}
 }
 
-func (repo *PhoneNumberRepository) Insert(phoneNumber interface{}) error {
+func (repo *PhoneNumberRepository) InsertNumber(phoneNumber interface{}) error {
 	return repo.DB.Create(phoneNumber).Error
+}
+
+func (repo *PhoneNumberRepository) FindById(id int) (*model.PhoneNumber, error) {
+	var phoneNumber model.PhoneNumber
+	err := repo.DB.Find(&phoneNumber, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &phoneNumber, nil
+}
+
+func (repo *PhoneNumberRepository) DeleteNumber(id int) error {
+	err := repo.DB.Delete(&model.PhoneNumber{}, id).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (repo *PhoneNumberRepository) UpdateNumber(id int, data model.PhoneNumber) (*model.PhoneNumber, error) {
+	var phoneNumber model.PhoneNumber
+	err := repo.DB.First(&phoneNumber).Error
+	if err != nil {
+		return nil, err
+	}
+
+	err = repo.DB.Model(&model.PhoneNumber{}).Where("id=?", id).Updates(&model.PhoneNumber{
+		PhoneNumber: data.PhoneNumber,
+		Provider:    data.Provider,
+		Type:        data.Type,
+	}).Scan(&phoneNumber).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &phoneNumber, nil
 }

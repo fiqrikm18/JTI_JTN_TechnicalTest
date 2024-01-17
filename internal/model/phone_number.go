@@ -21,8 +21,3 @@ type PhoneNumberRequest struct {
 	PhoneNumber string `json:"phone_number"`
 	Provider    string `json:"provider"`
 }
-
-type PhoneNumberResponse struct {
-	PhoneNumber string `json:"phone_number"`
-	Provider    string `json:"provider"`
-}

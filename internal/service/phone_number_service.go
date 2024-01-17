@@ -32,7 +32,7 @@ func (service *PhoneNumberService) Create(request interface{}) error {
 			phoneNumbers = append(phoneNumbers, phoneNumber)
 		}
 
-		err := service.repo.Insert(phoneNumbers)
+		err := service.repo.InsertNumber(phoneNumbers)
 		if err != nil {
 			return err
 		}
@@ -44,11 +44,42 @@ func (service *PhoneNumberService) Create(request interface{}) error {
 			numberType = 1
 		}
 		phoneNumber := model.PhoneNumber{PhoneNumber: req.PhoneNumber, Provider: req.Provider, Type: numberType}
-		err := service.repo.Insert(&phoneNumber)
+		err := service.repo.InsertNumber(&phoneNumber)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (service *PhoneNumberService) FindNumberById(id int) (*model.PhoneNumber, error) {
+	phoneNumber, err := service.repo.FindById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return phoneNumber, nil
+}
+
+func (service *PhoneNumberService) DeleteNumber(id int) error {
+	return service.repo.DeleteNumber(id)
+}
+
+func (service *PhoneNumberService) UpdateNumber(id int, data model.PhoneNumberRequest) (*model.PhoneNumber, error) {
+	lastChar, _ := strconv.Atoi(string(data.PhoneNumber[len(data.PhoneNumber)-1]))
+	numberType := 0 // 0 ganjil, 1 genap
+	if lastChar%2 == 0 {
+		numberType = 1
+	}
+
+	phoneNumber, err := service.repo.UpdateNumber(id, model.PhoneNumber{
+		PhoneNumber: data.PhoneNumber,
+		Provider:    data.Provider,
+		Type:        numberType,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return phoneNumber, nil
 }
