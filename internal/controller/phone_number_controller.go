@@ -95,7 +95,7 @@ func (p *PhoneNumberController) DeletePhoneNumber(c echo.Context) error {
 	defer func(dial *websocket.Conn) {
 		err := dial.Close()
 		if err != nil {
-
+			panic(err)
 		}
 	}(dial)
 
@@ -111,7 +111,10 @@ func (p *PhoneNumberController) DeletePhoneNumber(c echo.Context) error {
 		})
 	}
 
-	err = dial.WriteMessage(websocket.TextMessage, []byte("data_update"))
+	err = dial.WriteJSON(echo.Map{
+		"Type": "content_update",
+	})
+
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{
 			"message": err.Error(),

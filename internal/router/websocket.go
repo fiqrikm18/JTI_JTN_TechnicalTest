@@ -18,9 +18,19 @@ type SocketPayload struct {
 	Message string
 }
 
+type SocketResponse struct {
+	Type string
+}
+
+type WebSocketConnection struct {
+	*websocket.Conn
+}
+
 func StartWebsocket(e *echo.Echo) {
 	e.GET("/ws", func(c echo.Context) error {
-		currentGorillaConn, err := websocket.Upgrade(c.Response(), c.Request(), c.Response().Header(), 1024, 1024)
+		var upgrader = websocket.Upgrader{}
+
+		currentGorillaConn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 		if err != nil {
 			http.Error(c.Response(), "Could not open websocket connection", http.StatusBadRequest)
 		}
@@ -31,16 +41,6 @@ func StartWebsocket(e *echo.Echo) {
 		go handleIO(&currentConn, connections)
 		return nil
 	})
-}
-
-type SocketResponse struct {
-	From    string
-	Type    string
-	Message string
-}
-
-type WebSocketConnection struct {
-	*websocket.Conn
 }
 
 func handleIO(currentConn *WebSocketConnection, connections []*WebSocketConnection) {
