@@ -5,6 +5,10 @@ import (
 	"JTI_JTN_TechnicalTest/internal/model"
 	"JTI_JTN_TechnicalTest/internal/service"
 	"JTI_JTN_TechnicalTest/internal/util"
+	"fmt"
+	"github.com/gorilla/websocket"
+	"os"
+
 	"github.com/labstack/echo/v4"
 	"math/rand"
 	"net/http"
@@ -81,6 +85,33 @@ func (p *PhoneNumberController) DeletePhoneNumber(c echo.Context) error {
 	}
 
 	err = p.service.DeleteNumber(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message": err.Error(),
+		})
+	}
+
+	dial, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://localhost:%s/ws", os.Getenv("APP_PORT")), nil)
+	defer func(dial *websocket.Conn) {
+		err := dial.Close()
+		if err != nil {
+
+		}
+	}(dial)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message": err.Error(),
+		})
+	}
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message": err.Error(),
+		})
+	}
+
+	err = dial.WriteMessage(websocket.TextMessage, []byte("data_update"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{
 			"message": err.Error(),

@@ -13,8 +13,10 @@ func Run() {
 	svr.Use(middleware.Recover())
 	svr.Use(middleware.Logger())
 	svr.Use(middleware.Gzip())
+	svr.Use(middleware.CORS())
 
 	router.RegisterRouter(svr)
+	router.StartWebsocket(svr)
 
 	port := os.Getenv("APP_PORT")
 	svr.Logger.Fatal(svr.Start(":" + port))
