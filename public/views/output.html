@@ -25,53 +25,142 @@
             height: 100vh;
             display: flex;
             flex-wrap: nowrap;
-            justify-content: center;
             align-items: center;
             flex-direction: column;
         }
 
         .content__container {
             width: 60vw;
-            /*display: flex;*/
-            /*flex-direction: column;*/
-            /*flex-wrap: nowrap;*/
-            /*align-content: center;*/
-            /*justify-content: center;*/
-            /*align-items: flex-start;*/
-            padding: 2rem;
+            padding: .5rem;
             border-radius: 0.4rem;
+        }
+
+        .btn{
+            padding: 0.5rem 1rem;
+            background: #ffce86;
+            color: #343434;
+            border: none;
+            border-radius: .5rem;
+            min-width: 10rem;
+        }
+
+        .update_form {
+            background: #ffce86;
+            width: 30%;
+            height: 30%;
+            position: absolute;
+            top: 30%;
+            border-radius: 0.6rem;
+        }
+
+        .form__input__container {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            padding: 0.2rem;
+        }
+
+        .form__input__container > label {
+            margin-bottom: 0.3em;
+        }
+
+        .form__btn__container {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .form__btn__container > * {
+            margin-left: 8px;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="content__container" style="overflow: scroll;">
-        <table border="1" style="width: 100%; height: 70%;" id="phone_number_table">
+    <div class="content__container" style="overflow: scroll; border: 1px solid #ffb94a; margin: 1rem;">
+        <table style="width: 100%; height: 100%;" id="phone_number_table">
             <thead>
-            <tr>
-                <th>Ganjil</th>
-                <th>Genap</th>
-            </tr>
+                <tr style="background: #ffce86; color: white;">
+                    <th style="width: 50%; padding: .3rem;">Ganjil</th>
+                    <th style="width: 50%; padding: .3rem;">Genap</th>
+                </tr>
             </thead>
             <tbody></tbody>
         </table>
     </div>
+
+    <div style="margin: 0 2rem 2rem 2rem;">
+        <button id="btn_update" class="btn">Edit</button>
+        <button id="btn_delete" class="btn">Delete</button>
+    </div>
+
+    <div class="update_form">
+        <div style="width: 100%; height: 100%; padding: 2rem;">
+            <div class="form__input__container">
+                <label for="no_handphone">No Handphone</label>
+                <input style="width: 100%;" type="text" placeholder="No Handphone" id="no_handphone">
+            </div>
+
+            <div class="form__input__container">
+                <label for="provider">Provider</label>
+                <select id="provider" style="width: 100%;">
+                    <option value="xl" selected>XL</option>
+                    <option value="simpati">Simpati</option>
+                    <option value="indosat">Indosat</option>
+                </select>
+            </div>
+
+            <div class="form__btn__container">
+                <button id="btn_save" class="btn" style="border: 1px solid white; min-width: 100px !important;">Save</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
+    let contentId = 0;
+    let selectedPhoneNumber = "";
     $(document).ready(function () {
         fetchData();
         startWebsocketConnection();
+        $(".update_form").css({
+            "display": "none"
+        });
     });
 
+    $('#btn_delete').on("click", function (e) {
+        e.preventDefault();
+        deleteData();
+    });
+
+    $('#btn_update').on("click", function (e) {
+        e.preventDefault();
+        $(".update_form").css({
+            "display": "block"
+        });
+
+        $("#no_handphone").val(selectedPhoneNumber);
+    });
+
+    $("#btn_save").on('click', function (e) {
+        e.preventDefault();
+        const phoneNumber = $("#no_handphone").val();
+        const provider = $("#provider").val();
+        updateData(phoneNumber, provider);
+
+        $(".update_form").css({
+            "display": "none"
+        });
+    })
+
     function startWebsocketConnection() {
-        ws = new WebSocket("ws://localhost:3000/ws");
+        const ws = new WebSocket("ws://localhost:3000/ws");
 
         ws.onopen = function() {
             console.log("WS CONNECTED");
         }
 
-        ws.onmessage = function (event) {
+        ws.onmessage = function () {
             fetchData();
         }
 
@@ -80,12 +169,42 @@
         }
     }
 
+    function deleteData() {
+        $.ajax({
+            url: "/delete/" + contentId,
+            method: "DELETE",
+            success: function (data) {
+                alert("Data updated");
+            },
+            error: function (error) {}
+        });
+    }
+
+    function updateData(phoneNumber, provider) {
+        const payload = JSON.stringify({
+            "phone_number": phoneNumber,
+            "provider": provider
+        });
+
+        $.ajax({
+            url: "/update/" + contentId,
+            method: "PUT",
+            data: payload,
+            contentType: "application/json; charset=utf-8",
+            success: function (data) {
+                alert("data updated");
+            },
+            error: function (error) {}
+        });
+    }
+
     function fetchData() {
         $.ajax({
             url: "/get",
             method: "GET",
             success: function (data) {
-                console.log(data.data);
+                const container = $("#phone_number_table tbody");
+                container.html('');
                 let htmlContainer = "<tr><div><table style='overflow: scroll;'>";
 
                 const ganjilNumber = data.data.filter(value => {
@@ -99,17 +218,22 @@
                 const dataLength = Math.max(ganjilNumber.length, genapNumber.length);
 
                 for(let i = 0; i < dataLength; i++) {
+                    let background = "#ffce86";
+                    if (i % 2 === 0) {
+                        background = "#ffffff";
+                    }
+
                     // ganjil
                     if (i <= ganjilNumber.length-1) {
                         htmlContainer += "<tr>";
-                        htmlContainer += "<td>";
+                        htmlContainer += `<td onclick="hadleId(${ganjilNumber[i].id}, ${ganjilNumber[i].phone_number})" style='padding: .3rem; cursor: pointer;'>`;
                         htmlContainer += `${ganjilNumber[i].phone_number} (${ganjilNumber[i].provider})`;
                         htmlContainer += "</td>";
                     }
 
                     // genap
                     if (i <= genapNumber.length-1) {
-                        htmlContainer += "<td>";
+                        htmlContainer += `<td onclick="hadleId(${genapNumber[i].id}, ${genapNumber[i].phone_number})" style='padding: .3rem; cursor: pointer;'>`;
                         htmlContainer += `${genapNumber[i].phone_number} (${genapNumber[i].provider})`;
                         htmlContainer += "</td>";
                         htmlContainer += "</tr>";
@@ -117,10 +241,15 @@
                 }
 
                 htmlContainer += "</table></div></tr>";
-                $("#phone_number_table tbody").append(htmlContainer);
+                container.append(htmlContainer);
             },
             error: function (error) {}
-        })
+        });
+    }
+
+    function hadleId(id, phoneNumber) {
+        contentId = id;
+        selectedPhoneNumber = phoneNumber;
     }
 </script>
 
