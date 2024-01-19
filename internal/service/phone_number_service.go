@@ -17,6 +17,15 @@ func NewPhoneNumberService(conn *config.DatabaseConn) *PhoneNumberService {
 	return &PhoneNumberService{repo}
 }
 
+func (service *PhoneNumberService) GetAll() (*[]model.PhoneNumber, error) {
+	phoneNumbers, err := service.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return phoneNumbers, nil
+}
+
 func (service *PhoneNumberService) Create(request interface{}) error {
 	if reflect.TypeOf(request).Kind() == reflect.Slice {
 		req := request.([]model.PhoneNumberRequest)

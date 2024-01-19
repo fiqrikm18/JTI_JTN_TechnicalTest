@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Output</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        body{
+            width: 100vw;
+            height: 100vh;
+            font-family: Arial,serif;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .content__container {
+            width: 60vw;
+            /*display: flex;*/
+            /*flex-direction: column;*/
+            /*flex-wrap: nowrap;*/
+            /*align-content: center;*/
+            /*justify-content: center;*/
+            /*align-items: flex-start;*/
+            padding: 2rem;
+            border-radius: 0.4rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="content__container" style="overflow: scroll;">
+        <table border="1" style="width: 100%;" id="phone_number_table">
+            <thead>
+            <tr>
+                <th>Ganjil</th>
+                <th>Genap</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        fetchData();
+        startWebsocketConnection();
+    });
+
+    function startWebsocketConnection() {
+        ws = new WebSocket("ws://localhost:3000/ws");
+
+        ws.onopen = function() {
+            console.log("WS CONNECTED");
+        }
+
+        ws.onmessage = function (event) {
+            console.log(event);
+        }
+
+        ws.onclose = function () {
+            console.log("WS DISCONNECTED");
+        }
+    }
+
+    function fetchData() {
+        $.ajax({
+            url: "/get",
+            method: "GET",
+            success: function (data) {
+                console.log(data.data);
+                let htmlContainer = "<tr><div><table>";
+
+                const ganjilNumber = data.data.filter(value => {
+                    return value.type === 0;
+                });
+
+                const genapNumber = data.data.filter(value => {
+                    return value.type === 1;
+                });
+
+                const dataLength = Math.max(ganjilNumber.length, genapNumber.length);
+
+                for(let i = 0; i < dataLength; i++) {
+                    // ganjil
+                    if (i <= ganjilNumber.length-1) {
+                        htmlContainer += "<tr>";
+                        htmlContainer += "<td>";
+                        htmlContainer += `${ganjilNumber[i].phone_number} (${ganjilNumber[i].provider})`;
+                        htmlContainer += "</td>";
+                    }
+
+                    // genap
+                    if (i <= genapNumber.length-1) {
+                        htmlContainer += "<td>";
+                        htmlContainer += `${genapNumber[i].phone_number} (${genapNumber[i].provider})`;
+                        htmlContainer += "</td>";
+                        htmlContainer += "</tr>";
+                    }
+                }
+
+                htmlContainer += "</table></div></tr>";
+                $("#phone_number_table tbody").append(htmlContainer);
+            },
+            error: function (error) {}
+        })
+    }
+</script>
+
+</body>
+</html>

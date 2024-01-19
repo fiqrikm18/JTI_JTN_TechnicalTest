@@ -16,6 +16,7 @@ func Run() {
 	svr.Use(middleware.CORS())
 
 	router.RegisterRouter(svr)
+	router.RegisterWebRouter(svr)
 	router.StartWebsocket(svr)
 
 	port := os.Getenv("APP_PORT")

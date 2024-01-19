@@ -19,6 +19,15 @@ func (repo *PhoneNumberRepository) InsertNumber(phoneNumber interface{}) error {
 	return repo.DB.Create(phoneNumber).Error
 }
 
+func (repo *PhoneNumberRepository) GetAll() (*[]model.PhoneNumber, error) {
+	var phoneNumbers []model.PhoneNumber
+	err := repo.DB.Find(&phoneNumbers).Order("id desc").Error
+	if err != nil {
+		return nil, err
+	}
+	return &phoneNumbers, nil
+}
+
 func (repo *PhoneNumberRepository) FindById(id int) (*model.PhoneNumber, error) {
 	var phoneNumber model.PhoneNumber
 	err := repo.DB.Find(&phoneNumber, id).Error
